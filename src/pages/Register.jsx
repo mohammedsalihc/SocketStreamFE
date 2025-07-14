@@ -1,10 +1,9 @@
-import axios from 'axios';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ApiEndPoints } from '../services/api';
 import toast from 'react-hot-toast';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
-
+import { Register as RegisterService,SetToken ,GOOGLE_SIGN} from '../services/authService';
 function Register() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -20,18 +19,45 @@ function Register() {
             return;
         }
         try {
-            const res = await axios.post(ApiEndPoints.REGISTER, {
-                name,
-                email,
-                password,
-            });
-            localStorage.setItem('token', res.data.token);
+            const res = await RegisterService({name,email,password,});
+            SetToken(res?.data?.token)
             toast.success("Welcome to SocketStream");
             navigate('/home');
         } catch (err) {
             toast.error(err?.response?.data?.message)
         }
     };
+    const handleGoogleResponse=async(response)=>{
+        try{
+            const token = response?.credential;
+            const res = await GOOGLE_SIGN(ApiEndPoints.GOOGLE_SIGN,{token});
+            SetToken(res?.data?.token)
+            toast.success("Welcome back");
+            navigate('/home');
+        }catch(err){
+            toast.error(err?.response?.data?.message || "google registration failed");
+        }
+      }
+    
+      useEffect(() => {
+        if (window.google && window.google.accounts?.id) {
+          window.google.accounts.id.initialize({
+            client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
+            callback: handleGoogleResponse,
+          });
+    
+          window.google.accounts.id.renderButton(
+            document.getElementById("googleLoginDiv"),
+            {
+              theme: "outline",
+              size: "large",
+              type: "standard",
+              width: "100%",
+            }
+          );
+          window.google.accounts.id.disableAutoSelect();
+        }
+      }, []);
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
@@ -102,18 +128,7 @@ function Register() {
                 </p>
 
                 <div className="my-4 text-center text-gray-500">OR</div>
-
-                <button
-                    type="button"
-                    className="w-full flex items-center justify-center gap-3 border border-gray-300 py-2 rounded-lg hover:bg-gray-100 transition"
-                >
-                    <img
-                        src="assets/google-svgrepo-com.svg"
-                        alt="Google"
-                        className="w-5 h-5"
-                    />
-                    Sign up with Google
-                </button>
+                <div id="googleLoginDiv" className="w-full flex items-center justify-center " />
             </form>
         </div>
     );

@@ -1,10 +1,8 @@
-import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ApiEndPoints } from '../services/api';
 import toast from 'react-hot-toast';
 import { FiEye, FiEyeOff } from 'react-icons/fi'; // 👁️ Eye icons
-
+import { Login as LoginService,SetToken,GOOGLE_SIGN } from '../services/authService';
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -14,12 +12,12 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(ApiEndPoints.LOGIN, { email, password });
-      localStorage.setItem('token', res.data.token);
+      const res = await LoginService({email,password})
+      SetToken(res?.data?.token)
       toast.success("Welcome to SocketStream");
       navigate('/home');
     } catch (err) {
-        console.log(err)
+      console.log(err)
       toast.error(err?.response?.data?.message || "Login failed");
     }
   };
@@ -27,8 +25,8 @@ function Login() {
   const handleGoogleResponse=async(response)=>{
     try{
         const token = response?.credential;
-        const res = await axios.post(ApiEndPoints.GOOGLE_SIGN,{token});
-        localStorage.setItem('token', res.data.token);
+        const res = await GOOGLE_SIGN({token})
+        SetToken(res?.data?.token)
         toast.success("Welcome back");
         navigate('/home');
     }catch(err){
