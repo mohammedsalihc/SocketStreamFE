@@ -13,6 +13,9 @@ export const GOOGLE_SIGN =async (body)=>{
     return await axios.post(ApiEndPoints.GOOGLE_SIGN,body)
 }
 
+export const PROFILE = async(token)=>{
+    return await axios.get(ApiEndPoints.PROFILE,{headers:{Authorization:token}})
+}
 
 export const SetToken = (token)=>{
     localStorage.setItem('SStoken',token)

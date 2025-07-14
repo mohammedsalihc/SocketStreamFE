@@ -2,8 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { FiEye, FiEyeOff } from 'react-icons/fi'; // 👁️ Eye icons
-import { Login as LoginService,SetToken,GOOGLE_SIGN } from '../services/authService';
+import { Login as LoginService,SetToken,GOOGLE_SIGN,PROFILE } from '../services/authService';
+import { useDispatch } from 'react-redux';
+import { setUser } from '../redux/actions/AuthActions';
 function Login() {
+  const dispatch = useDispatch()
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -13,9 +16,14 @@ function Login() {
     e.preventDefault();
     try {
       const res = await LoginService({email,password})
-      SetToken(res?.data?.token)
-      toast.success("Welcome to SocketStream");
-      navigate('/home');
+      let token = res?.data?.token
+      const profile =  await PROFILE(token)
+      dispatch(setUser(profile?.data,token))
+      SetToken(token)
+      setTimeout(() => {
+        toast.success("Welcome to SocketStream");
+        navigate('/home');
+      },0);
     } catch (err) {
       console.log(err)
       toast.error(err?.response?.data?.message || "Login failed");
